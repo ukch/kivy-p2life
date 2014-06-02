@@ -1,0 +1,41 @@
+#:kivy 1.8.0
+#:import evolve kivy_gol_bindings.evolve
+
+<DrawableGrid>:
+    size: self.cols_adjusted, self.rows_adjusted
+
+<GridCell>:
+    canvas:
+        Color:
+            rgba: self.colour
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+CustomLayout:
+    grid: grid
+    orientation: "vertical"
+
+    AnchorLayout:
+        size_hint: 1, 1
+        anchor_x: "center"
+        anchor_y: "center"
+
+        DrawableGrid:
+            id: grid
+            size_hint: 0, 0
+            rows: 10
+            cols: 15
+
+    AnchorLayout:
+        size_hint: 1, 1
+        anchor_x: "right"
+        anchor_y: "bottom"
+        size_hint: 1, .2
+
+        Button:
+            id: next_button
+            text: "Next"
+            size_hint: 0, 0
+            size: 100, 50
+            on_press: evolve(grid)

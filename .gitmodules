@@ -1,0 +1,3 @@
+[submodule "submodules/kivy-grid-cells"]
+	path = submodules/kivy-grid-cells
+	url = https://github.com/ukch/kivy-grid-cells.git
