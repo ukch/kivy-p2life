@@ -54,7 +54,8 @@ class CustomLayout(BoxLayout):
             self.grid.cells = anim.next()
             remaining -= 1
             if remaining:
-                Clock.schedule_once(partial(_update, remaining=remaining), timeout=(1/speed))
+                Clock.schedule_once(partial(_update, remaining=remaining),
+                                    timeout=(1 / speed))
             elif callback is not None:
                 callback()
 
