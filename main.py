@@ -22,14 +22,15 @@ from kivy_p2life.gol import life_animation
 from kivy_p2life.utils import Player
 
 
-class CustomLayout(BoxLayout):
+class CustomBoxLayout(BoxLayout):
     app = ObjectProperty(None)
     grid = ObjectProperty(None)
+    shapes = ObjectProperty(None)
     end_turn_button = ObjectProperty(None)
     interactions_enabled = BooleanProperty(True)
 
     def __init__(self, *args, **kwargs):
-        super(CustomLayout, self).__init__(*args, **kwargs)
+        super(CustomBoxLayout, self).__init__(*args, **kwargs)
         self._player = None
 
     def disable_interaction(self):
@@ -81,11 +82,11 @@ class CustomLayout(BoxLayout):
     # Disable all touch events when evolution is in progress
     def on_touch_down(self, evt):
         if self.interactions_enabled:
-            return super(CustomLayout, self).on_touch_down(evt)
+            return super(CustomBoxLayout, self).on_touch_down(evt)
 
     def on_touch_move(self, evt):
         if self.interactions_enabled:
-            return super(CustomLayout, self).on_touch_move(evt)
+            return super(CustomBoxLayout, self).on_touch_move(evt)
 
 
 class GameOfLifeApp(App):
@@ -129,6 +130,11 @@ class GameOfLifeApp(App):
 
         self.root.set_turn(Players.WHITE)
         self.root.end_turn_button.bind(on_press=self.root.end_turn)
+        Clock.schedule_once(self.after_start, timeout=1)
+
+    def after_start(self, *args):
+        for shape in self.root.shapes.children:
+            shape.setup()
 
 
 if __name__ == '__main__':

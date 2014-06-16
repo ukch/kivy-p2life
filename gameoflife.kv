@@ -1,5 +1,7 @@
 #:kivy 1.8.0
 #:import evolve kivy_p2life.bindings.evolve
+#:import CellShape kivy_p2life.widgets
+#:import PatternVisualisation kivy_p2life.widgets
 #:import DrawableGrid kivy_grid_cells.widgets
 
 <DrawableGrid>:
@@ -13,8 +15,42 @@
             pos: self.pos
             size: self.size
 
-CustomLayout:
+<CellShape>:
+    size_hint: 0, 0
+    size: 75, 75
+    canvas:
+        Color:
+            rgba: [1, 1, 1, 1]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# Taken from http://stackoverflow.com/questions/17674736/
+<RotatedImage>:
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            axis: 0, 0, 1
+            origin: self.center
+    canvas.after:
+        PopMatrix
+
+<PatternVisualisation>:
+    drag_distance: 10
+
+<ButtonLayout@BoxLayout>:
+    size_hint: 0, 0
+    canvas:
+        Color:
+            rgba: [0.5, 0.5, 0.5, 1]
+        Rectangle:
+            pos: self.x - 5, self.y - 5
+            size: (self.width + 10), (self.height + 10)
+
+CustomBoxLayout:
     grid: grid
+    shapes: shapes
     end_turn_button: end_turn_button
     orientation: "vertical"
 
@@ -27,28 +63,40 @@ CustomLayout:
             id: grid
             size_hint: 0, 0
 
-    AnchorLayout:
-        anchor_x: "right"
-        anchor_y: "bottom"
+    BoxLayout:
         size_hint: 1, .2
 
-        BoxLayout:
-            orientation: "vertical"
-            size_hint: 0, 0
-            size: 100, 100
-            canvas:
-                Color:
-                    rgba: [0.5, 0.5, 0.5, 1]
-                Rectangle:
-                    pos: self.x - 5, self.y
-                    size: 105, 105
-            Button:
-                id: end_turn_button
-                text: "End turn"
-                background_normal: ""
-                background_down: ""
+        AnchorLayout:
+            anchor_x: "left"
+            anchor_y: "bottom"
 
-            Button:
-                id: next_button
-                text: "Next"
-                on_press: evolve(grid)
+            ButtonLayout:
+                id: shapes
+                size: 300, 75
+                CellShape:
+                    pattern: [[True, False], [True, True]]
+                CellShape:
+                    pattern: [[True, False], [True, True], [False, True]]
+                CellShape:
+                    pattern: [[False, True, False], [True, True, True]]
+                CellShape:
+                    pattern: [[False, True, False], [True, False, False], [True, True, True]]
+
+        AnchorLayout:
+            anchor_x: "right"
+            anchor_y: "bottom"
+
+            ButtonLayout:
+                orientation: "vertical"
+                size: 100, 100
+                Button:
+                    id: end_turn_button
+                    text: "End turn"
+                    background_normal: ""
+                    background_down: ""
+
+                # FIXME this button is for debugging only
+                Button:
+                    id: next_button
+                    text: "Next"
+                    on_press: evolve(grid)
