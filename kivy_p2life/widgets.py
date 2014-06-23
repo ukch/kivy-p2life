@@ -18,6 +18,12 @@ from kivy_grid_cells.widgets import DrawableGrid
 from .events import DragShapeEvent, DropShapeEvent
 
 
+def _get_root_widget():
+    # FIXME there must be a better way to do this!
+    assert len(Window.children) == 1, Window.children
+    return Window.children[0]
+
+
 class GOLGrid(DrawableGrid):
 
     """Subclassed DrawableGrid to allow drag-drop behaviour"""
@@ -34,7 +40,7 @@ class GOLGrid(DrawableGrid):
     def on_drop_shape(self, evt):
         if not self.collide_point(*evt.pos):
             return False
-        pattern = evt.pattern.astype(int) * 1  # FIXME
+        pattern = evt.pattern.astype(int) * _get_root_widget().player
         x, y = pattern.shape
         adj_x, adj_y = self.cell_coordinates(evt.pos)
         adj_x_end = adj_x + x
@@ -69,15 +75,10 @@ class PatternVisualisation(DragBehavior, ButtonBehavior, RotatedImage):
         self.drag_rect_y = self.parent.y
         self.original_position = self.parent.pos
 
-    def _get_root(self):
-        # FIXME there must be a better way to do this!
-        assert len(Window.children) == 1, Window.children
-        return Window.children[0]
-
     def on_touch_move(self, touch):
         if super(PatternVisualisation, self).on_touch_move(touch):
             evt = DragShapeEvent(self.parent.pattern, touch)
-            self._get_root().dispatch("on_drag_shape", evt)
+            _get_root_widget().dispatch("on_drag_shape", evt)
             return True
         return False
 
@@ -85,7 +86,7 @@ class PatternVisualisation(DragBehavior, ButtonBehavior, RotatedImage):
         if super(PatternVisualisation, self).on_touch_up(touch):
             self.pos = self.original_position
             evt = DropShapeEvent(self.parent.pattern, touch)
-            self._get_root().dispatch("on_drop_shape", evt)
+            _get_root_widget().dispatch("on_drop_shape", evt)
             return True
         return False
 
