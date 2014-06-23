@@ -5,6 +5,7 @@
 #:import GOLGrid kivy_p2life.widgets
 
 <GOLGrid>:
+    num_grids: 2
     size: self.cols * self.cell_size, self.rows * self.cell_size
 
 <GridCell>:
@@ -14,6 +15,12 @@
         Rectangle:
             pos: self.pos
             size: self.size
+        Color:
+            rgba: self.border_colour
+        Line:
+            # FIXME the drag line looks a bit ugly
+            points: [self.x, self.y, self.x + self.width, self.y, self.x + self.width, self.y + self.height, self.x, self.y + self.height, self.x, self.y]
+
 
 <CellShape>:
     size_hint: 0, 0

@@ -28,28 +28,40 @@ class GOLGrid(DrawableGrid):
 
     """Subclassed DrawableGrid to allow drag-drop behaviour"""
 
+    PREVIEW_GRID = 1
+
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_drag_shape")
         self.register_event_type("on_drop_shape")
         super(GOLGrid, self).__init__(*args, **kwargs)
 
-    def on_drag_shape(self, evt):
-        # TODO beautiful previewing
-        pass
+    def set_cell_state(self, cell, y, x):
+        super(GOLGrid, self).set_cell_state(cell, y, x)
+        grid = self.grids[self.PREVIEW_GRID]
+        cell.set_border_state(grid[y, x])
 
-    def on_drop_shape(self, evt):
-        if not self.collide_point(*evt.pos):
-            return False
+    def drag_or_drop_shape(self, evt, grid_index):
         pattern = evt.pattern.astype(int) * _get_root_widget().player
         x, y = pattern.shape
         adj_x, adj_y = self.cell_coordinates(evt.pos)
         adj_x_end = adj_x + x
         adj_y_end = adj_y + y
-        with self.writable_cells:
+        with self._writable_grid(grid_index):
             # TODO refuse to do this if cells are already set
-            self._cells[adj_x:adj_x_end, adj_y:adj_y_end] = pattern
+            self.grids[grid_index][adj_x:adj_x_end, adj_y:adj_y_end] = pattern
         self.update_cell_widgets()
 
+    def on_drag_shape(self, evt):
+        if not self.collide_point(*evt.pos):
+            return False
+        self.clear_grid(self.PREVIEW_GRID)
+        return self.drag_or_drop_shape(evt, self.PREVIEW_GRID)
+
+    def on_drop_shape(self, evt):
+        if not self.collide_point(*evt.pos):
+            return False
+        self.clear_grid(self.PREVIEW_GRID)
+        return self.drag_or_drop_shape(evt, self.CELLS_GRID)
 
 
 class RotatedImage(Image):
