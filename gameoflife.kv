@@ -2,10 +2,10 @@
 #:import evolve kivy_p2life.bindings.evolve
 #:import CellShape kivy_p2life.widgets
 #:import PatternVisualisation kivy_p2life.widgets
-#:import DrawableGrid kivy_grid_cells.widgets
+#:import GOLGrid kivy_p2life.widgets
 
-<DrawableGrid>:
-    size: self.cols_adjusted, self.rows_adjusted
+<GOLGrid>:
+    size: self.cols * self.cell_size, self.rows * self.cell_size
 
 <GridCell>:
     canvas:
@@ -59,7 +59,7 @@ CustomBoxLayout:
         anchor_x: "left"
         anchor_y: "bottom"
 
-        DrawableGrid:
+        GOLGrid:
             id: grid
             size_hint: 0, 0
 

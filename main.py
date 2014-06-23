@@ -18,6 +18,7 @@ from kivy.properties import (
 
 from kivy_grid_cells.constants import Colours
 from kivy_p2life.constants import Colours as Players
+from kivy_p2life.events import propagate_events
 from kivy_p2life.gol import life_animation
 from kivy_p2life.utils import Player
 
@@ -30,8 +31,16 @@ class CustomBoxLayout(BoxLayout):
     interactions_enabled = BooleanProperty(True)
 
     def __init__(self, *args, **kwargs):
+        self.register_event_type("on_drag_shape")
+        self.register_event_type("on_drop_shape")
         super(CustomBoxLayout, self).__init__(*args, **kwargs)
         self._player = None
+
+    def on_drag_shape(self, evt):
+        return propagate_events(self, "on_drag_shape", evt)
+
+    def on_drop_shape(self, evt):
+        return propagate_events(self, "on_drop_shape", evt)
 
     def disable_interaction(self):
         self.interactions_enabled = False
