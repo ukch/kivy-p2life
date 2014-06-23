@@ -13,6 +13,7 @@ from kivy.uix.behaviors import ButtonBehavior, DragBehavior
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 
+from kivy_grid_cells.constants import States
 from kivy_grid_cells.widgets import DrawableGrid
 
 from .events import DragShapeEvent, DropShapeEvent
@@ -40,14 +41,21 @@ class GOLGrid(DrawableGrid):
         grid = self.grids[self.PREVIEW_GRID]
         cell.set_border_state(grid[y, x])
 
-    def drag_or_drop_shape(self, evt, grid_index):
+    def drag_or_drop_shape(self, evt, grid_index, tolerate_illegal=False):
         pattern = evt.pattern.astype(int) * _get_root_widget().player
         x, y = pattern.shape
         adj_x, adj_y = self.cell_coordinates(evt.pos)
         adj_x_end = adj_x + x
         adj_y_end = adj_y + y
+        if (self._cells[adj_x:adj_x_end, adj_y:adj_y_end] != States.DEACTIVATED).any():
+            if tolerate_illegal:
+                # Change the whole pattern into a red grid
+                np.core.multiarray.copyto(pattern, States.ILLEGAL,
+                                          casting="unsafe")
+            else:
+                self.update_cell_widgets()  # Clear any existing pattern
+                return
         with self._writable_grid(grid_index):
-            # TODO refuse to do this if cells are already set
             self.grids[grid_index][adj_x:adj_x_end, adj_y:adj_y_end] = pattern
         self.update_cell_widgets()
 
@@ -55,12 +63,14 @@ class GOLGrid(DrawableGrid):
         if not self.collide_point(*evt.pos):
             return False
         self.clear_grid(self.PREVIEW_GRID)
-        return self.drag_or_drop_shape(evt, self.PREVIEW_GRID)
+        return self.drag_or_drop_shape(evt, self.PREVIEW_GRID,
+                                       tolerate_illegal=True)
 
     def on_drop_shape(self, evt):
-        if not self.collide_point(*evt.pos):
-            return False
         self.clear_grid(self.PREVIEW_GRID)
+        if not self.collide_point(*evt.pos):
+            self.update_cell_widgets()  # Clear any existing pattern
+            return False
         return self.drag_or_drop_shape(evt, self.CELLS_GRID)
 
 
