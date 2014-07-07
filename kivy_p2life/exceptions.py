@@ -1,0 +1,2 @@
+class UnknownFiducialError(RuntimeError):
+    pass

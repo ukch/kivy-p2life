@@ -1,4 +1,5 @@
 from hashlib import md5
+import logging
 import os
 
 import numpy as np
@@ -14,9 +15,11 @@ from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 
 from kivy_grid_cells.constants import States
+from kivy_p2life.constants import Types, FIDUCIALS
 from kivy_grid_cells.widgets import DrawableGrid
 
 from .events import DragShapeEvent, DropShapeEvent
+from .exceptions import UnknownFiducialError
 
 
 def _get_root_widget():
@@ -25,7 +28,45 @@ def _get_root_widget():
     return Window.children[0]
 
 
-class GOLGrid(DrawableGrid):
+class TUIODragDropMixin(object):
+
+    """Create drag_shape/drop_shape events from TUIO events"""
+
+    def __init__(self, *args, **kwargs):
+        super(TUIODragDropMixin, self).__init__(*args, **kwargs)
+        half_pi = np.pi / 2
+        self.rotation_array = np.array(
+            # [full circle, 3/4, half, 1/4, nothing]
+            [np.pi * 2, np.pi + half_pi, np.pi, half_pi, 0])
+
+    def touch_to_pattern(self, touch):
+        fid_type, pattern = FIDUCIALS.get(touch.fid, (None, None))
+        if fid_type != Types.PATTERN:
+            raise UnknownFiducialError(touch)
+        pattern = np.array(pattern)
+        # Use the (radian) angle to find out optimum rotation. This uses the
+        # index of self.rotation_array, eg. array[2] == np.pi (180deg); to
+        # rotate 180deg, rot90 needs to be called with argument 2.
+        rotations = np.abs(self.rotation_array - touch.angle).argmin()
+        return np.rot90(pattern, rotations)
+
+    def on_touch_move(self, touch):
+        if not hasattr(touch, "fid"):
+            # touch is not a TUIO event
+            return super(TUIODragDropMixin, self).on_touch_move(touch)
+        if not self.collide_point(*touch.pos):
+            return False
+        try:
+            pattern = self.touch_to_pattern(touch)
+        except UnknownFiducialError, e:
+            logging.warning("Unrecognised fiducial {} on move".format(touch.fid))
+            return False
+        evt = DragShapeEvent(pattern, touch)
+        _get_root_widget().dispatch("on_drag_shape", evt)
+        return False
+
+
+class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
     """Subclassed DrawableGrid to allow drag-drop behaviour"""
 
@@ -115,6 +156,8 @@ class PatternVisualisation(DragBehavior, ButtonBehavior, RotatedImage):
     def on_release(self):
         with self.canvas:
             self.angle -= 90
+        # For some reason np.rot90 rotates anti-clockwise, so we need to call
+        # it with argument 3 (to rotate 270 degrees instead of 90)
         self.parent.pattern = np.rot90(self.parent.pattern, 3)
 
 

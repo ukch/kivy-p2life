@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+
+<!-- 
+
+shapes:
+circle, square, roundsquare, triangle, star
+octagon, ellipse, cross, pentagon, hexagon
+
+colors:
+RGB in HEX format
+white=FFFFFF, black=000000, red=FF0000, etc.
+
+-->
+
+<tuio>
+
+<!-- 
+the definition of the various object classes 
+you can define the shape, color and name of each object
+-->
+
+<class name="white triangle" shape="triangle" color="DDDDDD" description="white triangle"/>
+<class name="black triangle" shape="triangle" color="222222" description="black triangle"/>
+
+<class name="white square" shape="square" color="DDDDDD" description="white square"/>
+<class name="black square" shape="square" color="222222" description="black square"/>
+
+<class name="white hexagon" shape="hexagon" color="DDDDDD" description="white hexagon"/>
+<class name="black hexagon" shape="hexagon" color="222222" description="black hexagon"/>
+
+<class name="white cross" shape="cross" color="DDDDDD" description="white cross"/>
+<class name="black cross" shape="cross" color="222222" description="black cross"/>
+
+<class name="white round" shape="round" color="DDDDDD" description="white round"/>
+<class name="black round" shape="round" color="222222" description="black round"/>
+
+<!-- 
+the definition of the actual object instances 
+you can define the type, IDs and position  each object
+-->
+
+<!-- YESNO triangles -->
+<!-- FIXME these are a bit fiddly, so replace them (in simulator) with two/three 1-fid pieces? -->
+<object class="white triangle" fiducials="100,101,102" active="true" xpos="120" ypos="100" angle="0"/>
+<object class="black triangle" fiducials="200,201,202" active="true" xpos="680" ypos="500" angle="180"/>
+
+
+<!-- White shapes -->
+<!-- Squares -->
+<object class="white square" fiducials="1" active="false" xpos="30" ypos="30" angle="0"/>
+<object class="white square" fiducials="1" active="false" xpos="30" ypos="80" angle="0"/>
+<object class="white square" fiducials="1" active="false" xpos="30" ypos="130" angle="0"/>
+<!-- Diamonds -->
+<object class="white hexagon" fiducials="2" active="false" xpos="30" ypos="180" angle="0"/>
+<object class="white hexagon" fiducials="2" active="false" xpos="30" ypos="230" angle="0"/>
+<object class="white hexagon" fiducials="2" active="false" xpos="30" ypos="280" angle="0"/>
+<!-- Factories -->
+<object class="white cross" fiducials="3" active="false" xpos="30" ypos="330" angle="0"/>
+<object class="white cross" fiducials="3" active="false" xpos="30" ypos="380" angle="0"/>
+<object class="white cross" fiducials="3" active="false" xpos="30" ypos="430" angle="0"/>
+<!-- Gliders -->
+<object class="white round" fiducials="4" active="false" xpos="30" ypos="480" angle="0"/>
+<object class="white round" fiducials="4" active="false" xpos="30" ypos="530" angle="0"/>
+<object class="white round" fiducials="4" active="false" xpos="30" ypos="580" angle="0"/>
+
+<!-- Black shapes -->
+<!-- Squares -->
+<object class="black square" fiducials="1" active="false" xpos="770" ypos="30" angle="0"/>
+<object class="black square" fiducials="1" active="false" xpos="770" ypos="80" angle="0"/>
+<object class="black square" fiducials="1" active="false" xpos="770" ypos="130" angle="0"/>
+<!-- Diamonds -->
+<object class="black hexagon" fiducials="2" active="false" xpos="770" ypos="180" angle="0"/>
+<object class="black hexagon" fiducials="2" active="false" xpos="770" ypos="230" angle="0"/>
+<object class="black hexagon" fiducials="2" active="false" xpos="770" ypos="280" angle="0"/>
+<!-- Factories -->
+<object class="black cross" fiducials="3" active="false" xpos="770" ypos="330" angle="0"/>
+<object class="black cross" fiducials="3" active="false" xpos="770" ypos="380" angle="0"/>
+<object class="black cross" fiducials="3" active="false" xpos="770" ypos="430" angle="0"/>
+<!-- Gliders -->
+<object class="black round" fiducials="4" active="false" xpos="770" ypos="480" angle="0"/>
+<object class="black round" fiducials="4" active="false" xpos="770" ypos="530" angle="0"/>
+<object class="black round" fiducials="4" active="false" xpos="770" ypos="580" angle="0"/>
+
+</tuio>

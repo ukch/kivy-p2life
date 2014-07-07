@@ -1,5 +1,6 @@
 #:kivy 1.8.0
 #:import evolve kivy_p2life.bindings.evolve
+#:import Patterns kivy_p2life.constants.Patterns
 #:import CellShape kivy_p2life.widgets
 #:import PatternVisualisation kivy_p2life.widgets
 #:import GOLGrid kivy_p2life.widgets
@@ -81,13 +82,13 @@ CustomBoxLayout:
                 id: shapes
                 size: 300, 75
                 CellShape:
-                    pattern: [[True, False], [True, True]]
+                    pattern: Patterns.SQUARE
                 CellShape:
-                    pattern: [[True, False], [True, True], [False, True]]
+                    pattern: Patterns.DIAMOND
                 CellShape:
-                    pattern: [[False, True, False], [True, True, True]]
+                    pattern: Patterns.OSCILLATOR
                 CellShape:
-                    pattern: [[False, True, False], [True, False, False], [True, True, True]]
+                    pattern: Patterns.GLIDER
 
         AnchorLayout:
             anchor_x: "right"

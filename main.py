@@ -1,11 +1,13 @@
 from __future__ import division
 
+from ConfigParser import NoSectionError, NoOptionError
 from functools import partial
 
 import kivy
 kivy.require('1.8.0')
 
 from kivy.clock import Clock
+from kivy.config import Config as KivyConfig
 from kivy.core.window import Window
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -113,6 +115,11 @@ class GameOfLifeApp(App):
             "cols": 30,
             "cell_size": 15,
         })
+        config.setdefaults("input", {
+            # 'touch' can be a finger or a mouse, depending on the platform
+            "touch": True,
+            "tuio": False,
+        })
 
     def build(self):
         config = self.config
@@ -126,6 +133,15 @@ class GameOfLifeApp(App):
         self.root.grid.rows = config.getint("grid", "rows")
         self.root.grid.cols = config.getint("grid", "cols")
         self.root.grid.cell_size = config.getint("grid", "cell_size")
+
+        # Input
+        # TODO present a different interface depending on input method
+        if config.getboolean("input", "tuio"):
+            try:
+                KivyConfig.get("input", "tuiotouchscreen")
+            except (NoSectionError, NoOptionError):
+                KivyConfig.set('input', 'tuiotouchscreen', 'tuio,0.0.0.0:3333')
+                KivyConfig.write()
 
     def on_start(self):
         # TODO can we calculate this in the kv file?
