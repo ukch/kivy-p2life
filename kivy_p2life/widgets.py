@@ -1,3 +1,4 @@
+import functools
 from hashlib import md5
 import logging
 import os
@@ -6,6 +7,7 @@ import numpy as np
 
 from kivy.core.window import Window
 from kivy.properties import (
+    DictProperty,
     ListProperty,
     NumericProperty,
     ObjectProperty,
@@ -32,6 +34,17 @@ class TUIODragDropMixin(object):
 
     """Create drag_shape/drop_shape events from TUIO events"""
 
+    def _require_fiducial(method):
+        @functools.wraps(method)
+        def wrapper(self, touch):
+            if not hasattr(touch, "fid"):
+                # touch is not a TUIO event
+                return getattr(super(TUIODragDropMixin, self), method.__name__)(touch)
+            return method(self, touch)
+        return wrapper
+
+    pattern_locations = DictProperty()
+
     def __init__(self, *args, **kwargs):
         super(TUIODragDropMixin, self).__init__(*args, **kwargs)
         half_pi = np.pi / 2
@@ -50,20 +63,54 @@ class TUIODragDropMixin(object):
         rotations = np.abs(self.rotation_array - touch.angle).argmin()
         return np.rot90(pattern, rotations)
 
+    @_require_fiducial
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            try:
+                pattern = self.touch_to_pattern(touch)
+            except UnknownFiducialError:
+                self.pattern_locations[touch.id] = (None, None, None, None)
+            else:
+                self.pattern_locations[touch.id] = \
+                    self.cell_coordinates(touch.pos) + pattern.shape
+        else:
+            self.pattern_locations[touch.id] = (None, None, None, None)
+
+    @_require_fiducial
+    def on_touch_up(self, touch):
+        if not self.collide_point(*touch.pos):
+            # Remove associated shape
+            self.clear_grid_for_event(self.PREVIEW_GRID, touch)
+        # Deregister this touch
+        if touch.id in self.pattern_locations:
+            del self.pattern_locations[touch.id]
+
+    @_require_fiducial
     def on_touch_move(self, touch):
-        if not hasattr(touch, "fid"):
-            # touch is not a TUIO event
-            return super(TUIODragDropMixin, self).on_touch_move(touch)
         if not self.collide_point(*touch.pos):
             return False
         try:
             pattern = self.touch_to_pattern(touch)
-        except UnknownFiducialError, e:
+        except UnknownFiducialError:
             logging.warning("Unrecognised fiducial {} on move".format(touch.fid))
             return False
         evt = DragShapeEvent(pattern, touch)
-        _get_root_widget().dispatch("on_drag_shape", evt)
+        self.dispatch("on_drag_shape", evt)
+        self.pattern_locations[touch.id] = \
+            self.cell_coordinates(touch.pos) + pattern.shape
         return False
+
+    def clear_grid_for_event(self, grid_index, evt):
+        if evt.id not in self.pattern_locations:
+            return super(TUIODragDropMixin, self).clear_grid_for_event(grid_index, evt)
+        adj_x, adj_y, x, y = self.pattern_locations[evt.id]
+        if None in (adj_x, adj_y, x, y):
+            return False
+        empty = np.zeros(shape=(x, y), dtype=int)
+        adj_x_end = adj_x + x
+        adj_y_end = adj_y + y
+        with self._writable_grid(grid_index):
+            self.grids[grid_index][adj_x:adj_x_end, adj_y:adj_y_end] = empty
 
 
 class GOLGrid(TUIODragDropMixin, DrawableGrid):
@@ -103,12 +150,12 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
     def on_drag_shape(self, evt):
         if not self.collide_point(*evt.pos):
             return False
-        self.clear_grid(self.PREVIEW_GRID)
+        self.clear_grid_for_event(self.PREVIEW_GRID, evt)
         return self.drag_or_drop_shape(evt, self.PREVIEW_GRID,
                                        tolerate_illegal=True)
 
     def on_drop_shape(self, evt):
-        self.clear_grid(self.PREVIEW_GRID)
+        self.clear_grid_for_event(self.PREVIEW_GRID, evt)
         if not self.collide_point(*evt.pos):
             self.update_cell_widgets()  # Clear any existing pattern
             return False

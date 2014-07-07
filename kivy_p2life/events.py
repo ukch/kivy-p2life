@@ -9,6 +9,10 @@ class PatternEvent(object):
             self.__class__.__name__, self.pattern.tolist(), self.touch)
 
     @property
+    def id(self):
+        return self.touch.id
+
+    @property
     def pos(self):
         return self.touch.pos
 
