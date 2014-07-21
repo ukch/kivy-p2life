@@ -20,7 +20,7 @@ from kivy_grid_cells.constants import States
 from kivy_p2life.constants import Types, FIDUCIALS
 from kivy_grid_cells.widgets import DrawableGrid
 
-from .events import DragShapeEvent, DropShapeEvent
+from . import events
 from .exceptions import UnknownFiducialError
 
 
@@ -46,6 +46,8 @@ class TUIODragDropMixin(object):
     pattern_locations = DictProperty()
 
     def __init__(self, *args, **kwargs):
+        self.register_event_type("on_confirm")
+        self.register_event_type("on_reset")
         super(TUIODragDropMixin, self).__init__(*args, **kwargs)
         half_pi = np.pi / 2
         self.rotation_array = np.array(
@@ -65,14 +67,22 @@ class TUIODragDropMixin(object):
 
     @_require_fiducial
     def on_touch_down(self, touch):
+        # Fire custom events
+        fid_type, data = FIDUCIALS.get(touch.fid, (None, None))
+        if fid_type == Types.EVENT_DISPATCHER:
+            Event = getattr(events, data)
+            Event(touch).dispatch(self)
+            return False
+
+        # Set pattern location data
+        try:
+            pattern = self.touch_to_pattern(touch)
+        except UnknownFiducialError:
+            logging.warning("Unrecognised fiducial {} on down".format(touch.fid))
+            return False
         if self.collide_point(*touch.pos):
-            try:
-                pattern = self.touch_to_pattern(touch)
-            except UnknownFiducialError:
-                self.pattern_locations[touch.id] = (None, None, None, None)
-            else:
-                self.pattern_locations[touch.id] = \
-                    self.cell_coordinates(touch.pos) + pattern.shape
+            self.pattern_locations[touch.id] = \
+                self.cell_coordinates(touch.pos) + pattern.shape
         else:
             self.pattern_locations[touch.id] = (None, None, None, None)
 
@@ -94,8 +104,7 @@ class TUIODragDropMixin(object):
         except UnknownFiducialError:
             logging.warning("Unrecognised fiducial {} on move".format(touch.fid))
             return False
-        evt = DragShapeEvent(pattern, touch)
-        self.dispatch("on_drag_shape", evt)
+        events.DragShapeEvent(pattern, touch).dispatch(self)
         self.pattern_locations[touch.id] = \
             self.cell_coordinates(touch.pos) + pattern.shape
         return False
@@ -111,6 +120,30 @@ class TUIODragDropMixin(object):
         adj_y_end = adj_y + y
         with self._writable_grid(grid_index):
             self.grids[grid_index][adj_x:adj_x_end, adj_y:adj_y_end] = empty
+
+    def combine_with_cells(self, grid):
+        """Add the given grid to the live grid"""
+        assert (States.ILLEGAL not in grid)
+        self.cells = grid + self.cells
+
+    def on_confirm(self, evt):
+        root = _get_root_widget()
+        if evt.player != root.player:
+            logging.warning("Caught unauthorised confirm for player {}".format(evt.player))
+            return False
+        grid = self.grids[self.PREVIEW_GRID].copy()
+        grid[grid == States.ILLEGAL] = States.DEACTIVATED
+        self.combine_with_cells(grid)
+        self.clear_grid(self.PREVIEW_GRID)
+        self.update_cell_widgets()
+        root.end_turn()
+
+    def on_reset(self, evt):
+        if evt.player != _get_root_widget().player:
+            logging.warning("Caught unauthorised reset for player {}".format(evt.player))
+            return False
+        self.clear_grid(self.PREVIEW_GRID)
+        self.update_cell_widgets()
 
 
 class GOLGrid(TUIODragDropMixin, DrawableGrid):
@@ -187,16 +220,16 @@ class PatternVisualisation(DragBehavior, ButtonBehavior, RotatedImage):
 
     def on_touch_move(self, touch):
         if super(PatternVisualisation, self).on_touch_move(touch):
-            evt = DragShapeEvent(self.parent.pattern, touch)
-            _get_root_widget().dispatch("on_drag_shape", evt)
+            evt = events.DragShapeEvent(self.parent.pattern, touch)
+            evt.dispatch(_get_root_widget())
             return True
         return False
 
     def on_touch_up(self, touch):
         if super(PatternVisualisation, self).on_touch_up(touch):
             self.pos = self.original_position
-            evt = DropShapeEvent(self.parent.pattern, touch)
-            _get_root_widget().dispatch("on_drop_shape", evt)
+            evt = events.DropShapeEvent(self.parent.pattern, touch)
+            evt.dispatch(_get_root_widget())
             return True
         return False
 

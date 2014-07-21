@@ -1,8 +1,24 @@
-class PatternEvent(object):
+from .constants import Colours
+
+class CustomEvent(object):
+
+    EVENT_DISPATCH_NAME = NotImplemented
+
+    def __init__(self, touch):
+        self.touch = touch
+
+    def __repr__(self):
+        return "{}(\n\ttouch={}\n)".format(self.__class__.__name__, self.touch)
+
+    def dispatch(self, widget):
+        return widget.dispatch(self.EVENT_DISPATCH_NAME, self)
+
+
+class PatternEvent(CustomEvent):
 
     def __init__(self, pattern, touch):
+        super(PatternEvent, self).__init__(touch)
         self.pattern = pattern
-        self.touch = touch
 
     def __repr__(self):
         return "{}(\n\tpattern={},\n\ttouch={}\n)".format(
@@ -17,8 +33,27 @@ class PatternEvent(object):
         return self.touch.pos
 
 
-DragShapeEvent = type("DragShapeEvent", (PatternEvent, ), {})
-DropShapeEvent = type("DropShapeEvent", (PatternEvent, ), {})
+DragShapeEvent = type("DragShapeEvent", (PatternEvent, ),
+                      {"EVENT_DISPATCH_NAME": "on_drag_shape"})
+DropShapeEvent = type("DropShapeEvent", (PatternEvent, ),
+                      {"EVENT_DISPATCH_NAME": "on_drop_shape"})
+
+ConfirmEventWhite = type("ConfirmEventWhite", (CustomEvent, ), {
+    "EVENT_DISPATCH_NAME": "on_confirm",
+    "player": Colours.WHITE,
+})
+ConfirmEventBlack = type("ConfirmEventWhite", (CustomEvent, ), {
+    "EVENT_DISPATCH_NAME": "on_confirm",
+    "player": Colours.BLACK,
+})
+ResetEventWhite = type("ConfirmEventWhite", (CustomEvent, ), {
+    "EVENT_DISPATCH_NAME": "on_reset",
+    "player": Colours.WHITE,
+})
+ResetEventBlack = type("ConfirmEventWhite", (CustomEvent, ), {
+    "EVENT_DISPATCH_NAME": "on_reset",
+    "player": Colours.BLACK,
+})
 
 
 def propagate_events(widget, name, evt):

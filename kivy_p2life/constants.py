@@ -11,8 +11,7 @@ class Colours(object):
 
 class Types(object):
     PATTERN = "pattern"
-    YESNO_WHITE = "yesno_white"
-    YESNO_BLACK = "yesno_black"
+    EVENT_DISPATCHER = "event dispatcher"
 
 
 class Patterns(object):
@@ -28,8 +27,8 @@ FIDUCIALS = {
     3: (Types.PATTERN, Patterns.OSCILLATOR),
     4: (Types.PATTERN, Patterns.GLIDER),
 
-    101: (Types.YESNO_WHITE, True),
-    102: (Types.YESNO_WHITE, False),
-    201: (Types.YESNO_BLACK, True),
-    202: (Types.YESNO_BLACK, False),
+    101: (Types.EVENT_DISPATCHER, "ConfirmEventWhite"),
+    102: (Types.EVENT_DISPATCHER, "ResetEventWhite"),
+    201: (Types.EVENT_DISPATCHER, "ConfirmEventBlack"),
+    202: (Types.EVENT_DISPATCHER, "ResetEventBlack"),
 }
