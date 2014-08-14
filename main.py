@@ -6,11 +6,13 @@ from functools import partial
 import kivy
 kivy.require('1.8.0')
 
+from kivy.app import App
 from kivy.clock import Clock
 from kivy.config import Config as KivyConfig
 from kivy.core.window import Window
-from kivy.app import App
+from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.anchorlayout import AnchorLayout
 
 from kivy.properties import (
     BooleanProperty,
@@ -25,7 +27,7 @@ from kivy_p2life.gol import life_animation
 from kivy_p2life.utils import Player
 
 
-class CustomBoxLayout(BoxLayout):
+class CustomLayoutMixin(object):
     app = ObjectProperty(None)
     grid = ObjectProperty(None)
     shapes = ObjectProperty(None)
@@ -35,7 +37,7 @@ class CustomBoxLayout(BoxLayout):
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_drag_shape")
         self.register_event_type("on_drop_shape")
-        super(CustomBoxLayout, self).__init__(*args, **kwargs)
+        super(CustomLayoutMixin, self).__init__(*args, **kwargs)
         self._player = None
 
     def on_drag_shape(self, evt):
@@ -46,16 +48,19 @@ class CustomBoxLayout(BoxLayout):
 
     def disable_interaction(self):
         self.interactions_enabled = False
-        self.end_turn_button.text = "Waiting..."
+        if self.end_turn_button:
+            self.end_turn_button.text = "Waiting..."
 
     def enable_interaction(self):
         self.interactions_enabled = True
-        self.end_turn_button.text = "End turn"
+        if self.end_turn_button:
+            self.end_turn_button.text = "End turn"
 
     def set_turn(self, player):
         other_colour = Player(player).next()  # TODO something more clever?
-        self.end_turn_button.color = Colours[other_colour]
-        self.end_turn_button.background_color = Colours[player]
+        if self.end_turn_button:
+            self.end_turn_button.color = Colours[other_colour]
+            self.end_turn_button.background_color = Colours[player]
         self.player = player
         self.grid.selected_state = player
 
@@ -93,11 +98,21 @@ class CustomBoxLayout(BoxLayout):
     # Disable all touch events when evolution is in progress
     def on_touch_down(self, evt):
         if self.interactions_enabled:
-            return super(CustomBoxLayout, self).on_touch_down(evt)
+            return super(CustomLayoutMixin, self).on_touch_down(evt)
 
     def on_touch_move(self, evt):
         if self.interactions_enabled:
-            return super(CustomBoxLayout, self).on_touch_move(evt)
+            return super(CustomLayoutMixin, self).on_touch_move(evt)
+
+
+class CustomBoxLayout(CustomLayoutMixin, BoxLayout):
+
+    pass
+
+
+class CustomAnchorLayout(CustomLayoutMixin, AnchorLayout):
+
+    pass
 
 
 class GameOfLifeApp(App):
@@ -123,43 +138,45 @@ class GameOfLifeApp(App):
 
     def build(self):
         config = self.config
-        self.root.app = self
-
-        # Game
-        self.speed = config.getint("game", "speed")
-        self.iterations_per_turn = config.getint("game", "iterations_per_turn")
-
-        # Grid
-        self.root.grid.rows = config.getint("grid", "rows")
-        self.root.grid.cols = config.getint("grid", "cols")
-        self.root.grid.cell_size = config.getint("grid", "cell_size")
 
         # Input
-        # TODO present a different interface depending on input method
         if config.getboolean("input", "tuio"):
             try:
                 KivyConfig.get("input", "tuiotouchscreen")
             except (NoSectionError, NoOptionError):
                 KivyConfig.set('input', 'tuiotouchscreen', 'tuio,0.0.0.0:3333')
                 KivyConfig.write()
+        if config.getboolean("input", "touch"):
+            # Enable mouse interface
+            kv_filename = 'gameoflife-mouse.kv'
+        else:
+            kv_filename = 'gameoflife-nomouse.kv'
+
+        # Game
+        self.speed = config.getint("game", "speed")
+        self.iterations_per_turn = config.getint("game", "iterations_per_turn")
+
+        # Root widget
+        self.root = Builder.load_file(kv_filename)
+        self.root.app = self
+
+        # Grid
+        self.root.grid.rows = config.getint("grid", "rows")
+        self.root.grid.cols = config.getint("grid", "cols")
+        self.root.grid.cell_size = config.getint("grid", "cell_size")
 
     def on_start(self):
-        # TODO can we calculate this in the kv file?
-        def refresh_grid_position(*args):
-            return  # FIXME fix grid positioning
-            self.root.grid.center = self.root.grid.parent.center[:]
-
-        Window.bind(on_resize=refresh_grid_position)
         self.root.grid.init_cells()
-        refresh_grid_position()
 
         self.root.set_turn(Players.WHITE)
-        self.root.end_turn_button.bind(on_press=self.root.end_turn)
+        if self.root.end_turn_button:
+            self.root.end_turn_button.bind(on_press=self.root.end_turn)
         Clock.schedule_once(self.after_start, timeout=1)
 
     def after_start(self, *args):
-        for shape in self.root.shapes.children:
-            shape.setup()
+        if self.root.shapes:
+            for shape in self.root.shapes.children:
+                shape.setup()
 
 
 if __name__ == '__main__':
