@@ -10,6 +10,7 @@ import numpy as np
 from kivy.core.window import Window
 from kivy.properties import (
     AliasProperty,
+    BooleanProperty,
     DictProperty,
     ListProperty,
     NumericProperty,
@@ -17,8 +18,8 @@ from kivy.properties import (
 )
 from kivy.uix.behaviors import ButtonBehavior, DragBehavior
 from kivy.uix.image import Image
+from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.widget import Widget
 
 from kivy_grid_cells.constants import States, Colours
 from kivy_p2life.constants import Types, FIDUCIALS
@@ -168,6 +169,13 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
         grid = self.grids[self.PREVIEW_GRID]
         cell.set_border_state(grid[y, x])
 
+    def get_player_ui(self, number):
+        for ui in self.player_uis:
+            if ui.number == number:
+                return ui
+        else:
+            raise KeyError("No Player found with number {}".format(number))
+
     def drag_or_drop_shape(self, evt, grid_index, tolerate_illegal=False):
         pattern = evt.pattern.astype(int) * _get_root_widget().player
         x, y = pattern.shape
@@ -206,13 +214,13 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
             ui.score = np.count_nonzero(cells == ui.number)
 
 
-class PlayerUI(Widget):
+class PlayerUI(Label):
 
     app = ObjectProperty()
     colour = ListProperty(Colours[States.DEACTIVATED])
     completeness = NumericProperty(0)
 
-    def get_score(self, score):
+    def get_score(self):
         return getattr(self, "_score", 0)
 
     def set_score(self, score):
@@ -235,6 +243,15 @@ class PlayerUI(Widget):
         self.colour = Colours[number]
 
     number = AliasProperty(get_number, set_number)
+
+    @property
+    def has_maximum_score(self):
+        return (self.score == self.app.top_score)
+
+    # Not to be confused with has_maximum_score. This is set when a player had
+    # the maximum score at the last count, but they may not still have the
+    # maximum score.
+    had_maximum_score = BooleanProperty(False)
 
 
 class RotatedImage(Image):

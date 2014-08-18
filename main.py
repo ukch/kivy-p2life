@@ -64,6 +64,10 @@ class CustomLayoutMixin(object):
         self.player = player
         self.grid.selected_state = player
 
+    def set_winner(self, player, ui):
+        # Override this method on a per-UI basis
+        pass
+
     def evolve(self, iterations, speed, callback=None):
         anim = life_animation(self.grid.cells)
 
@@ -80,10 +84,20 @@ class CustomLayoutMixin(object):
 
     def _end_turn_callback(self):
         self.set_turn(self.player.next())
-        self.enable_interaction()
+        ui = self.grid.get_player_ui(self.player)
+        if ui.had_maximum_score and ui.has_maximum_score:
+            self.set_winner(self.player, ui)
+            return
+        else:
+            self.enable_interaction()
 
     def end_turn(self, *args):
         self.disable_interaction()
+        ui = self.grid.get_player_ui(self.player)
+        if ui.has_maximum_score:
+            ui.had_maximum_score = True
+        else:
+            ui.had_maximum_score = False
         self.evolve(self.app.iterations_per_turn, speed=self.app.speed,
                     callback=self._end_turn_callback)
 
@@ -112,7 +126,9 @@ class CustomBoxLayout(CustomLayoutMixin, BoxLayout):
 
 class CustomAnchorLayout(CustomLayoutMixin, AnchorLayout):
 
-    pass
+    def set_winner(self, player, ui):
+        ui.text = "You win!"
+
 
 
 class GameOfLifeApp(App):
