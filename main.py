@@ -124,6 +124,7 @@ class GameOfLifeApp(App):
         config.setdefaults("game", {
             "speed": 10,
             "iterations_per_turn": 15,
+            "top_score": 100,
         })
         config.setdefaults("grid", {
             "rows": 30,
@@ -155,6 +156,7 @@ class GameOfLifeApp(App):
         # Game
         self.speed = config.getint("game", "speed")
         self.iterations_per_turn = config.getint("game", "iterations_per_turn")
+        self.top_score = config.getint("game", "top_score")
 
         # Root widget
         self.root = Builder.load_file(kv_filename)

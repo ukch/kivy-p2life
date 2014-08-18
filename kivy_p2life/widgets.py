@@ -1,3 +1,5 @@
+from __future__ import division
+
 import functools
 from hashlib import md5
 import logging
@@ -7,6 +9,7 @@ import numpy as np
 
 from kivy.core.window import Window
 from kivy.properties import (
+    AliasProperty,
     DictProperty,
     ListProperty,
     NumericProperty,
@@ -15,8 +18,9 @@ from kivy.properties import (
 from kivy.uix.behaviors import ButtonBehavior, DragBehavior
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.widget import Widget
 
-from kivy_grid_cells.constants import States
+from kivy_grid_cells.constants import States, Colours
 from kivy_p2life.constants import Types, FIDUCIALS
 from kivy_grid_cells.widgets import DrawableGrid
 
@@ -152,6 +156,8 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
     PREVIEW_GRID = 1
 
+    player_uis = ListProperty()
+
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_drag_shape")
         self.register_event_type("on_drop_shape")
@@ -193,6 +199,42 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
             self.update_cell_widgets()  # Clear any existing pattern
             return False
         return self.drag_or_drop_shape(evt, self.CELLS_GRID)
+
+    def on_cells_updated(self):
+        cells = self.cells
+        for ui in self.player_uis:
+            ui.score = np.count_nonzero(cells == ui.number)
+
+
+class PlayerUI(Widget):
+
+    app = ObjectProperty()
+    colour = ListProperty(Colours[States.DEACTIVATED])
+    completeness = NumericProperty(0)
+
+    def get_score(self, score):
+        return getattr(self, "_score", 0)
+
+    def set_score(self, score):
+        if self.app is None:
+            top_score = 0
+        else:
+            top_score = self.app.top_score
+        score = min(score, top_score)
+        self._score = score
+        self.completeness = score / top_score
+
+    score = AliasProperty(get_score, set_score)
+
+    def get_number(self):
+        return getattr(self, "_number", States.DEACTIVATED)
+
+    def set_number(self, number):
+        assert number in [States.FIRST, States.SECOND], "Unknown state {}!".format(number)
+        self._number = number
+        self.colour = Colours[number]
+
+    number = AliasProperty(get_number, set_number)
 
 
 class RotatedImage(Image):
