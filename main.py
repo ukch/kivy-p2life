@@ -63,6 +63,8 @@ class CustomLayoutMixin(object):
             self.end_turn_button.background_color = Colours[player]
         self.player = player
         self.grid.selected_state = player
+        # TODO intelligently work out this value
+        self.grid.player_pieces[player - 1].update_pieces(self.app.minimum_pieces)
 
     def set_winner(self, player, ui):
         # Override this method on a per-UI basis
@@ -141,6 +143,7 @@ class GameOfLifeApp(App):
             "speed": 10,
             "iterations_per_turn": 15,
             "top_score": 100,
+            "minimum_pieces": 3,
         })
         config.setdefaults("grid", {
             "rows": 30,
@@ -173,6 +176,7 @@ class GameOfLifeApp(App):
         self.speed = config.getint("game", "speed")
         self.iterations_per_turn = config.getint("game", "iterations_per_turn")
         self.top_score = config.getint("game", "top_score")
+        self.minimum_pieces = config.getint("game", "minimum_pieces")
 
         # Root widget
         self.root = Builder.load_file(kv_filename)
@@ -189,6 +193,7 @@ class GameOfLifeApp(App):
         self.root.set_turn(Players.WHITE)
         if self.root.end_turn_button:
             self.root.end_turn_button.bind(on_press=self.root.end_turn)
+
         Clock.schedule_once(self.after_start, timeout=1)
 
     def after_start(self, *args):

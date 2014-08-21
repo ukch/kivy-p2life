@@ -1,6 +1,7 @@
 #:kivy 1.8.0
 #:import GOLGrid kivy_p2life.widgets
 #:import PlayerUI kivy_p2life.widgets
+#:import PiecesContainer kivy_p2life.widgets
 
 # TODO when 1.8.1 is released, use the new #import statement
 <GOLGrid>:
@@ -36,28 +37,65 @@
             size: (self.width - 1) * self.completeness, self.height - 2
 
 
+<PiecesContainer>:
+    size_hint: 0, 0
+    canvas.before:
+        Color:
+            rgba: [0.4, 0.4, 0.4, 1]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+
 CustomAnchorLayout:
     grid: grid
     anchor: "center", "center"
 
     BoxLayout:
-        orientation: "vertical"
         size_hint: 0, 0
-        size: grid.width, grid.height + 100
+        size: inner_box.width + 100, inner_box.height
 
-        PlayerUI:
-            id: white_ui
-            app: root.app
-            number: 1
-            size: grid.width, 50
-
-        GOLGrid:
-            id: grid
+        RelativeLayout:
             size_hint: 0, 0
-            player_uis: [white_ui, black_ui]
+            size: 50, inner_box.height
 
-        PlayerUI:
-            id: black_ui
-            app: root.app
-            number: 2
-            size: grid.width, 50
+            PiecesContainer:
+                id: white_pieces
+                number: 1
+                pos: 0, 49
+                size: 50, grid.height + 1
+
+        BoxLayout:
+            id: inner_box
+            orientation: "vertical"
+            size_hint: 0, 0
+            size: grid.width, grid.height + 100
+
+            PlayerUI:
+                id: white_ui
+                app: root.app
+                number: 1
+                size: grid.width, 50
+
+            GOLGrid:
+                id: grid
+                size_hint: 0, 0
+                player_uis: [white_ui, black_ui]
+                player_pieces: [white_pieces, black_pieces]
+
+            PlayerUI:
+                id: black_ui
+                app: root.app
+                number: 2
+                size: grid.width, 50
+
+        RelativeLayout:
+            size_hint: 0, 0
+            size: 50, inner_box.height
+
+            PiecesContainer:
+                id: black_pieces
+                number: 2
+                pos: 0, 49
+                size: 50, grid.height + 1
+

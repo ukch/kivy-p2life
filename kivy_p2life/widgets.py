@@ -2,12 +2,14 @@ from __future__ import division
 
 import functools
 from hashlib import md5
+from itertools import product
 import logging
 import os
 
 import numpy as np
 
 from kivy.core.window import Window
+from kivy.graphics import Color, Rectangle
 from kivy.properties import (
     AliasProperty,
     BooleanProperty,
@@ -20,6 +22,7 @@ from kivy.uix.behaviors import ButtonBehavior, DragBehavior
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.widget import Widget
 
 from kivy_grid_cells.constants import States, Colours
 from kivy_p2life.constants import Types, FIDUCIALS
@@ -151,6 +154,55 @@ class TUIODragDropMixin(object):
         self.update_cell_widgets()
 
 
+class PiecesContainer(Widget):
+
+    number = NumericProperty(States.DEACTIVATED)
+    pieces = NumericProperty(0)
+
+    def __init__(self, *args, **kwargs):
+        super(PiecesContainer, self).__init__(*args, **kwargs)
+        self._colour_cache = {}
+
+    def redraw(self, old_amount=None):
+        # constants
+        CELL_SIZE = 25
+        MAX_COLUMNS = 18
+        GREY = [0.4, 0.4, 0.4, 1]
+
+        if (old_amount and old_amount >= MAX_COLUMNS * 2
+                and self.pieces >= MAX_COLUMNS * 2):
+            # Container is full so there's no sense in redrawing it
+            return
+
+        if old_amount is None:
+            old_amount = MAX_COLUMNS * 2
+        max_iteration = max(old_amount, self.pieces)
+        cache = self._colour_cache
+
+        iterator = product(xrange(MAX_COLUMNS), xrange(2))  # left, right
+        for piece_number, (col, row) in enumerate(iterator):
+            if piece_number >= max_iteration:
+                break
+            if (row, col) not in cache:
+                # new rectangle
+                with self.canvas:
+                    cache[(row, col)] = (
+                        Color(*GREY),
+                        Rectangle(size=(CELL_SIZE - 1, CELL_SIZE - 1)),
+                    )
+            colour, rect = cache[(row, col)]
+            rect.pos = (self.x + row * CELL_SIZE, self.y + col * CELL_SIZE + 1)
+            if piece_number <= self.pieces:
+                colour.rgb = Colours[self.number]
+            else:
+                colour.rgb = GREY
+
+    def update_pieces(self, by_amount):
+        old_amount = self.pieces
+        self.pieces += by_amount
+        self.redraw(old_amount)
+
+
 class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
     """Subclassed DrawableGrid to allow drag-drop behaviour"""
@@ -158,6 +210,7 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
     PREVIEW_GRID = 1
 
     player_uis = ListProperty()
+    player_pieces = ListProperty()
 
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_drag_shape")
