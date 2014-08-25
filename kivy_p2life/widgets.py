@@ -26,7 +26,7 @@ from kivy.uix.widget import Widget
 
 from kivy_grid_cells.constants import States, Colours
 from kivy_p2life.constants import Types, FIDUCIALS
-from kivy_grid_cells.widgets import DrawableGrid
+from kivy_grid_cells.widgets import GridCell, DrawableGrid
 
 from . import events
 from .exceptions import UnknownFiducialError
@@ -36,6 +36,30 @@ def _get_root_widget():
     # FIXME there must be a better way to do this!
     assert len(Window.children) == 1, Window.children
     return Window.children[0]
+
+
+class LimitedGridCell(GridCell):
+
+    """Subclassed GridCell to allow limiting on/off switch behaviour"""
+
+    def _get_player_pieces(self):
+        return self.parent.player_pieces[_get_root_widget().player - 1]
+
+    def should_ignore_touch(self):
+        # TODO ignore touch when in TUIO-mode
+        if self.state == self.parent.selected_state:
+            return False
+        return self._get_player_pieces().pieces < 1
+
+    def handle_touch(self):
+        if self.should_ignore_touch():
+            return
+        new_state = super(LimitedGridCell, self).handle_touch()
+        if new_state == States.DEACTIVATED:
+            value = 1
+        else:
+            value = -1
+        self._get_player_pieces().update_pieces( value)
 
 
 class TUIODragDropMixin(object):
@@ -141,6 +165,7 @@ class TUIODragDropMixin(object):
             return False
         grid = self.grids[self.PREVIEW_GRID].copy()
         grid[grid == States.ILLEGAL] = States.DEACTIVATED
+        self.player_pieces[root.player - 1].update_pieces(-np.count_nonzero(grid))
         self.combine_with_cells(grid)
         self.clear_grid(self.PREVIEW_GRID)
         self.update_cell_widgets()
@@ -192,7 +217,7 @@ class PiecesContainer(Widget):
                     )
             colour, rect = cache[(row, col)]
             rect.pos = (self.x + row * CELL_SIZE, self.y + col * CELL_SIZE + 1)
-            if piece_number <= self.pieces:
+            if piece_number < self.pieces:
                 colour.rgb = Colours[self.number]
             else:
                 colour.rgb = GREY
@@ -207,10 +232,11 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
     """Subclassed DrawableGrid to allow drag-drop behaviour"""
 
+    GRID_CELL_CLASS = LimitedGridCell
     PREVIEW_GRID = 1
 
     player_uis = ListProperty()
-    player_pieces = ListProperty()
+    player_pieces = ListProperty()  # TODO a better way to get player_pieces
 
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_drag_shape")
@@ -230,12 +256,19 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
             raise KeyError("No Player found with number {}".format(number))
 
     def drag_or_drop_shape(self, evt, grid_index, tolerate_illegal=False):
-        pattern = evt.pattern.astype(int) * _get_root_widget().player
+        root = _get_root_widget()
+        pattern = evt.pattern.astype(int) * root.player
         x, y = pattern.shape
         adj_x, adj_y = self.cell_coordinates(evt.pos)
         adj_x_end = adj_x + x
         adj_y_end = adj_y + y
-        if (self._cells[adj_x:adj_x_end, adj_y:adj_y_end] != States.DEACTIVATED).any():
+        player_pieces = self.player_pieces[root.player - 1]
+        grid = self.grids[grid_index]
+        counters = np.count_nonzero(grid[grid != States.ILLEGAL])
+        counters += np.count_nonzero(pattern)
+        overlaps = (self._cells[adj_x:adj_x_end, adj_y:adj_y_end]
+                    != States.DEACTIVATED)
+        if counters > player_pieces.pieces or overlaps.any():
             if tolerate_illegal:
                 # Change the whole pattern into a red grid
                 np.core.multiarray.copyto(pattern, States.ILLEGAL,
@@ -244,7 +277,9 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
                 self.update_cell_widgets()  # Clear any existing pattern
                 return
         with self._writable_grid(grid_index):
-            self.grids[grid_index][adj_x:adj_x_end, adj_y:adj_y_end] = pattern
+            grid[adj_x:adj_x_end, adj_y:adj_y_end] = pattern
+        if grid_index == self.CELLS_GRID:
+            player_pieces.update_pieces(-counters)
         self.update_cell_widgets()
 
     def on_drag_shape(self, evt):
