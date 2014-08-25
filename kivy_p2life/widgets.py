@@ -80,6 +80,7 @@ class TUIODragDropMixin(object):
     def __init__(self, *args, **kwargs):
         self.register_event_type("on_confirm")
         self.register_event_type("on_reset")
+        self.register_event_type("on_admin_reset")
         super(TUIODragDropMixin, self).__init__(*args, **kwargs)
         half_pi = np.pi / 2
         self.rotation_array = np.array(
@@ -177,6 +178,9 @@ class TUIODragDropMixin(object):
             return False
         self.clear_grid(self.PREVIEW_GRID)
         self.update_cell_widgets()
+
+    def on_admin_reset(self, evt):
+        _get_root_widget().app.reset_ui()
 
 
 class PiecesContainer(Widget):

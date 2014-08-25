@@ -19,6 +19,8 @@ the definition of the various object classes
 you can define the shape, color and name of each object
 -->
 
+<class name="red star" shape="star" color="FF0000" description="red star"/>
+
 <class name="white triangle" shape="triangle" color="DDDDDD" description="white triangle"/>
 <class name="black triangle" shape="triangle" color="222222" description="black triangle"/>
 
@@ -43,6 +45,8 @@ you can define the type, IDs and position  each object
 <!-- FIXME these are a bit fiddly, so replace them (in simulator) with two/three 1-fid pieces? -->
 <object class="white triangle" fiducials="100,101,102" active="true" xpos="120" ypos="100" angle="0"/>
 <object class="black triangle" fiducials="200,201,202" active="true" xpos="680" ypos="500" angle="180"/>
+
+<object class="red star" fiducials="500" active="false" xpos="400" ypos="30" angle="0"/>
 
 
 <!-- White shapes -->

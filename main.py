@@ -67,6 +67,10 @@ class CustomLayoutMixin(object):
                          self.grid.get_new_pieces_for_player(player))
         self.grid.player_pieces[player - 1].update_pieces(new_pieces)
 
+    def unset_winner(self):
+        # Override this method on a per-UI basis
+        pass
+
     def set_winner(self, player, ui):
         # Override this method on a per-UI basis
         pass
@@ -114,7 +118,8 @@ class CustomLayoutMixin(object):
 
     # Disable all touch events when evolution is in progress
     def on_touch_down(self, evt):
-        if self.interactions_enabled:
+        # TODO less hacky way to enable admin-reset
+        if self.interactions_enabled or (hasattr(evt, "fid") and evt.fid == 500):
             return super(CustomLayoutMixin, self).on_touch_down(evt)
 
     def on_touch_move(self, evt):
@@ -132,6 +137,9 @@ class CustomAnchorLayout(CustomLayoutMixin, AnchorLayout):
     def set_winner(self, player, ui):
         ui.text = "You win!"
 
+    def unset_winner(self):
+        for ui in self.grid.player_uis:
+            ui.text = ""
 
 
 class GameOfLifeApp(App):
@@ -201,6 +209,15 @@ class GameOfLifeApp(App):
         if self.root.shapes:
             for shape in self.root.shapes.children:
                 shape.setup()
+
+    def reset_ui(self):
+        for grid_index, unused in enumerate(self.root.grid.grids):
+            self.root.grid.clear_grid(grid_index)
+        self.root.unset_winner()
+        for player_pieces in self.root.grid.player_pieces:
+            player_pieces.update_pieces(-player_pieces.pieces)
+        self.root.set_turn(Players.WHITE)
+        self.root.enable_interaction()
 
 
 if __name__ == '__main__':

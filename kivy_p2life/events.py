@@ -1,5 +1,6 @@
 from .constants import Colours
 
+
 class CustomEvent(object):
 
     EVENT_DISPATCH_NAME = NotImplemented
@@ -42,17 +43,21 @@ ConfirmEventWhite = type("ConfirmEventWhite", (CustomEvent, ), {
     "EVENT_DISPATCH_NAME": "on_confirm",
     "player": Colours.WHITE,
 })
-ConfirmEventBlack = type("ConfirmEventWhite", (CustomEvent, ), {
+ConfirmEventBlack = type("ConfirmEventBlack", (CustomEvent, ), {
     "EVENT_DISPATCH_NAME": "on_confirm",
     "player": Colours.BLACK,
 })
-ResetEventWhite = type("ConfirmEventWhite", (CustomEvent, ), {
+ResetEventWhite = type("ResetEventWhite", (CustomEvent, ), {
     "EVENT_DISPATCH_NAME": "on_reset",
     "player": Colours.WHITE,
 })
-ResetEventBlack = type("ConfirmEventWhite", (CustomEvent, ), {
+ResetEventBlack = type("ResetEventBlack", (CustomEvent, ), {
     "EVENT_DISPATCH_NAME": "on_reset",
     "player": Colours.BLACK,
+})
+
+AdminResetEvent = type("AdminResetEvent", (CustomEvent, ), {
+    "EVENT_DISPATCH_NAME": "on_admin_reset",
 })
 
 
