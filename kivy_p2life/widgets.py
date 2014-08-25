@@ -301,6 +301,9 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
         for ui in self.player_uis:
             ui.score = np.count_nonzero(cells == ui.number)
 
+    def get_new_pieces_for_player(self, player):
+        return np.count_nonzero(self.cells == player) // 3
+
 
 class PlayerUI(Label):
 

@@ -63,8 +63,9 @@ class CustomLayoutMixin(object):
             self.end_turn_button.background_color = Colours[player]
         self.player = player
         self.grid.selected_state = player
-        # TODO intelligently work out this value
-        self.grid.player_pieces[player - 1].update_pieces(self.app.minimum_pieces)
+        new_pieces = max(self.app.minimum_pieces,
+                         self.grid.get_new_pieces_for_player(player))
+        self.grid.player_pieces[player - 1].update_pieces(new_pieces)
 
     def set_winner(self, player, ui):
         # Override this method on a per-UI basis
