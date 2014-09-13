@@ -28,6 +28,12 @@ def p2life_step(X):
     """P2Life implementation using scipy tools.
     For more on P2Life see
     http://www.dcs.bbk.ac.uk/~gr/software/p2life/p2life.php
+
+    Simple evolution:
+    >>> p2life_step(np.array([[1, 2, 1], [1, 2, 1], [1, 2, 1]]))
+    array([[1, 0, 1],
+           [1, 0, 1],
+           [1, 0, 1]])
     """
     from scipy.signal import convolve2d
     ones = np.ones((3, 3))
@@ -71,6 +77,26 @@ def life_animation(X):
     ----------
     X : array_like
         a two-dimensional numpy array showing the game board
+
+    Simple spinner (it must be a 5x5 because our implementation wraps):
+    >>> gen = life_animation(\
+        np.array([[0, 0, 0, 0, 0],\
+                  [0, 0, 0, 0, 0],\
+                  [0, 1, 1, 1, 0],\
+                  [0, 0, 0, 0, 0],\
+                  [0, 0, 0, 0, 0]]))
+    >>> gen.next() # first
+    array([[0, 0, 0, 0, 0],
+           [0, 0, 1, 0, 0],
+           [0, 0, 1, 0, 0],
+           [0, 0, 1, 0, 0],
+           [0, 0, 0, 0, 0]])
+    >>> gen.next() # second
+    array([[0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0],
+           [0, 1, 1, 1, 0],
+           [0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0]])
     """
     X = np.asarray(X)
     assert X.ndim == 2

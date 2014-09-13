@@ -76,6 +76,25 @@ class CustomLayoutMixin(object):
         pass
 
     def evolve(self, iterations, speed, callback=None):
+        """ Evolve the grid multiple times
+        Arguments:
+            iterations; int; Number of times to evolve
+            speed; int; Speed at which to evolve
+            callback; function; Function to call after evolving
+
+        >>> import mock
+        >>> from kivy.uix.widget import Widget
+        >>> Clock.schedule_once = lambda func, timeout: func()
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {})()
+        >>> thing.grid = mock.Mock(cells=[[]])
+        >>> callback = mock.Mock()
+        >>> with mock.patch("kivy_p2life.gol.life_step") as life_step:
+        ...     thing.evolve(10, 0.001, callback)
+        >>> life_step.call_count
+        10
+        >>> callback.call_count
+        1
+        """
         anim = life_animation(self.grid.cells)
 
         def _update(dt=None, remaining=0):
@@ -90,6 +109,48 @@ class CustomLayoutMixin(object):
         _update(remaining=iterations)
 
     def _end_turn_callback(self):
+        """ Finish ending the turn after iterating
+
+        Setup:
+        >>> import mock
+        >>> from kivy.uix.widget import Widget
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {\
+            "set_turn": mock.Mock(),\
+            "set_winner": mock.Mock(),\
+        })()
+        >>> thing.player = Players.WHITE
+        >>> thing.grid = mock.Mock()
+        >>> ui = thing.grid.get_player_ui.return_value
+
+        Normal turn:
+        >>> ui.had_maximum_score = False
+        >>> ui.has_maximum_score = True
+        >>> thing.interactions_enabled = False
+        >>> thing._end_turn_callback()
+        >>> thing.set_winner.call_count
+        0
+        >>> thing.interactions_enabled
+        True
+
+        >>> ui.had_maximum_score = True
+        >>> ui.has_maximum_score = False
+        >>> thing.interactions_enabled = False
+        >>> thing._end_turn_callback()
+        >>> thing.set_winner.call_count
+        0
+        >>> thing.interactions_enabled
+        True
+
+        Winning turn:
+        >>> ui.had_maximum_score = True
+        >>> ui.has_maximum_score = True
+        >>> thing.interactions_enabled = False
+        >>> thing._end_turn_callback()
+        >>> thing.set_winner.call_count
+        1
+        >>> thing.interactions_enabled
+        False
+        """
         self.set_turn(self.player.next())
         ui = self.grid.get_player_ui(self.player)
         if ui.had_maximum_score and ui.has_maximum_score:
@@ -99,6 +160,34 @@ class CustomLayoutMixin(object):
             self.enable_interaction()
 
     def end_turn(self, *args):
+        """ Perform end turn tasks and evolve
+
+        Setup:
+        >>> import mock
+        >>> from kivy.uix.widget import Widget
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {})()
+        >>> thing.player = Players.WHITE
+        >>> thing.app = mock.Mock()
+        >>> thing.grid = mock.Mock()
+        >>> thing.evolve = mock.Mock()
+        >>> ui = thing.grid.get_player_ui.return_value
+
+        Maximum score:
+        >>> ui.has_maximum_score = True
+        >>> thing.end_turn()
+        >>> ui.had_maximum_score
+        True
+        >>> thing.evolve.call_count
+        1
+
+        Not maximum score:
+        >>> ui.has_maximum_score = False
+        >>> thing.end_turn()
+        >>> ui.had_maximum_score
+        False
+        >>> thing.evolve.call_count
+        2
+        """
         self.disable_interaction()
         ui = self.grid.get_player_ui(self.player)
         if ui.has_maximum_score:
@@ -116,13 +205,37 @@ class CustomLayoutMixin(object):
     def player(self, value):
         self._player = Player(value)
 
-    # Disable all touch events when evolution is in progress
     def on_touch_down(self, evt):
+        """ Disable all touch events when evolution is in progress
+
+        >>> import mock
+        >>> from kivy.uix.widget import Widget
+        >>> Widget.on_touch_down = mock.Mock(return_value="superclass called")
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {})()
+        >>> thing.on_touch_down(object())
+        'superclass called'
+        >>> thing.interactions_enabled = False
+        >>> thing.on_touch_down(object())
+        >>> thing.on_touch_down(mock.Mock(fid=0))
+        'superclass called'
+        """
         # TODO less hacky way to enable admin-reset
         if self.interactions_enabled or (hasattr(evt, "fid") and evt.fid == 0):
             return super(CustomLayoutMixin, self).on_touch_down(evt)
 
     def on_touch_move(self, evt):
+        """ Disable all touch events when evolution is in progress
+
+        >>> import mock
+        >>> from kivy.uix.widget import Widget
+        >>> Widget.on_touch_move = mock.Mock(return_value="superclass called")
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {})()
+        >>> thing.on_touch_move(object())
+        'superclass called'
+        >>> thing.interactions_enabled = False
+        >>> thing.on_touch_move(object())
+        >>> thing.on_touch_move(mock.Mock(fid=0))
+        """
         if self.interactions_enabled:
             return super(CustomLayoutMixin, self).on_touch_move(evt)
 

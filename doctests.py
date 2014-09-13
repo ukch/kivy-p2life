@@ -1,21 +1,27 @@
-""" Doctests for kivy-p2life
+""" Doctests for kivy-p2life """
 
->>> p2life_step(np.array([[1, 2, 1], [1, 2, 1], [1, 2, 1]]))
-array([[1, 0, 1],
-       [1, 0, 1],
-       [1, 0, 1]])
-"""
+import doctest
+import sys
+import unittest
 
-import numpy as np
+import mock
 
-from kivy_p2life.gol import p2life_step
+MODULES_WITH_DOCTESTS = [
+    "kivy_grid_cells.widgets",
+    "kivy_p2life.widgets",
+    "kivy_p2life.gol",
+    "main",
+]
+
+def load_tests(loader, tests, ignore):
+    for name in MODULES_WITH_DOCTESTS:
+        tests.addTests(doctest.DocTestSuite(name))
+    return tests
 
 if __name__ == "__main__":
-    import doctest
-    import logging
+    # Kivy hijacks the argv so we need to clear it
+    argv = sys.argv[:]
+    sys.argv = sys.argv[:1]
 
-    logging.getLogger().setLevel(logging.INFO)
-
-    result = doctest.testmod()
-    if not result.failed:
-        logging.info("All doctests passed")
+    with mock.patch("kivy.base.EventLoopBase.ensure_window"):
+        unittest.main(argv=argv)
