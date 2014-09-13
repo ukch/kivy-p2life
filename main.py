@@ -119,7 +119,7 @@ class CustomLayoutMixin(object):
     # Disable all touch events when evolution is in progress
     def on_touch_down(self, evt):
         # TODO less hacky way to enable admin-reset
-        if self.interactions_enabled or (hasattr(evt, "fid") and evt.fid == 500):
+        if self.interactions_enabled or (hasattr(evt, "fid") and evt.fid == 0):
             return super(CustomLayoutMixin, self).on_touch_down(evt)
 
     def on_touch_move(self, evt):

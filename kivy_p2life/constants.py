@@ -32,5 +32,5 @@ FIDUCIALS = {
     201: (Types.EVENT_DISPATCHER, "ConfirmEventBlack"),
     202: (Types.EVENT_DISPATCHER, "ResetEventBlack"),
 
-    500: (Types.EVENT_DISPATCHER, "AdminResetEvent"),
+    0: (Types.EVENT_DISPATCHER, "AdminResetEvent"),
 }
