@@ -4,7 +4,7 @@ from ConfigParser import NoSectionError, NoOptionError
 from functools import partial
 
 import kivy
-kivy.require('1.8.0')
+kivy.require('1.8.1')
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -289,9 +289,9 @@ class GameOfLifeApp(App):
                 KivyConfig.write()
         if config.getboolean("input", "touch"):
             # Enable mouse interface
-            kv_filename = 'gameoflife-mouse.kv'
+            kv_filename = 'gameoflife-nontuio.kv'
         else:
-            kv_filename = 'gameoflife-nomouse.kv'
+            kv_filename = 'gameoflife-tuio.kv'
 
         # Game
         self.speed = config.getint("game", "speed")

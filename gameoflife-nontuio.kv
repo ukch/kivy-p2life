@@ -1,27 +1,10 @@
-#:kivy 1.8.0
+#:kivy 1.8.1
 #:import evolve kivy_p2life.bindings.evolve
 #:import Patterns kivy_p2life.constants.Patterns
 #:import CellShape kivy_p2life.widgets
 #:import PatternVisualisation kivy_p2life.widgets
-#:import GOLGrid kivy_p2life.widgets
 
-# TODO when 1.8.1 is released, use the new #import statement
-<GOLGrid>:
-    num_grids: 2
-    size: self.cols * self.cell_size, self.rows * self.cell_size
-
-<GridCell>:
-    canvas:
-        Color:
-            rgba: self.colour
-        Rectangle:
-            pos: self.pos
-            size: self.size
-        Color:
-            rgba: self.border_colour
-        Line:
-            # FIXME the drag line looks a bit ugly
-            points: [self.x, self.y, self.x + self.width, self.y, self.x + self.width, self.y + self.height, self.x, self.y + self.height, self.x, self.y]
+#:include gameoflife-common.kv
 
 <CellShape>:
     size_hint: 0, 0
