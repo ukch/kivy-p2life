@@ -1,5 +1,6 @@
 #:kivy 1.8.1
 #:import GOLGrid kivy_p2life.widgets
+#:import PlayerUI kivy_p2life.widgets
 
 <GOLGrid>:
     num_grids: 2
@@ -17,3 +18,17 @@
         Line:
             # FIXME the drag line looks a bit ugly
             points: [self.x, self.y, self.x + self.width, self.y, self.x + self.width, self.y + self.height, self.x, self.y + self.height, self.x, self.y]
+
+<PlayerUI>:
+    color: [1, 0, 0, 1]
+    canvas.before:
+        Color:
+            rgba: [0.4, 0.4, 0.4, 1]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: self.colour
+        Rectangle:
+            pos: self.x + 1, self.y + 1
+            size: (self.width - 1) * self.completeness, self.height - 2

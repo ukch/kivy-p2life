@@ -48,11 +48,31 @@ CustomBoxLayout:
     AnchorLayout:
         size_hint: 1, 1
         anchor_x: "left"
+        anchor_y: "top"
+
+        BoxLayout:
+            size_hint: 0, 0
+            size: self.parent.width, 50
+
+            PlayerUI:
+                id: white_ui
+                app: root.app
+                number: 1
+
+            PlayerUI:
+                id: black_ui
+                app: root.app
+                number: 2
+
+    AnchorLayout:
+        size_hint: 1, 1
+        anchor_x: "left"
         anchor_y: "bottom"
 
         GOLGrid:
             id: grid
             size_hint: 0, 0
+            player_uis: [white_ui, black_ui]
 
     BoxLayout:
         size_hint: 1, .2

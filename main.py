@@ -21,6 +21,7 @@ from kivy.properties import (
 
 from kivy_grid_cells.constants import Colours
 from kivy_p2life.constants import Colours as Players
+from kivy_p2life.exceptions import NoPiecesObjectForPlayer
 from kivy_p2life.events import propagate_events
 from kivy_p2life.gol import life_animation
 from kivy_p2life.utils import Player
@@ -64,7 +65,10 @@ class CustomLayoutMixin(object):
         self.grid.selected_state = player
         new_pieces = max(self.app.minimum_pieces,
                          self.grid.get_new_pieces_for_player(player))
-        self.grid.player_pieces[player - 1].update_pieces(new_pieces)
+        try:
+            self.grid.get_player_pieces().update_pieces(new_pieces)
+        except NoPiecesObjectForPlayer:
+            pass
 
     def unset_winner(self):
         # Override this method on a per-UI basis

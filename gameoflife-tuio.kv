@@ -6,18 +6,6 @@
 
 <PlayerUI>:
     size_hint: 0, 0
-    color: [1, 0, 0, 1]
-    canvas.before:
-        Color:
-            rgba: [0.4, 0.4, 0.4, 1]
-        Rectangle:
-            pos: self.pos
-            size: self.size
-        Color:
-            rgba: self.colour
-        Rectangle:
-            pos: self.x + 1, self.y + 1
-            size: (self.width - 1) * self.completeness, self.height - 2
 
 <PiecesContainer>:
     size_hint: 0, 0

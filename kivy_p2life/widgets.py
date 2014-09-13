@@ -29,7 +29,7 @@ from kivy_p2life.constants import Types, FIDUCIALS
 from kivy_grid_cells.widgets import GridCell, DrawableGrid
 
 from . import events
-from .exceptions import UnknownFiducialError
+from .exceptions import UnknownFiducialError, NoPiecesObjectForPlayer
 
 
 def _get_root_widget():
@@ -41,24 +41,24 @@ class LimitedGridCell(GridCell):
 
     """Subclassed GridCell to allow limiting on/off switch behaviour"""
 
-    def _get_player_pieces(self):
-        return self.parent.player_pieces[_get_root_widget().player - 1]
-
     def should_ignore_touch(self):
         # TODO ignore touch when in TUIO-mode
         if self.state == self.parent.selected_state:
             return False
-        return self._get_player_pieces().pieces < 1
+        try:
+            return self.parent.get_player_pieces().pieces < 1
+        except NoPiecesObjectForPlayer:
+            return False
 
     def handle_touch(self):
         """ Flip the cell's state between on and off, then update player_pieces
 
         >>> import mock
         >>> cell = LimitedGridCell(1, (0, 0))
-        >>> cell._get_player_pieces = mock.Mock()
+        >>> cell.parent = mock.Mock()
         >>> cell.parent = mock.Mock(selected_state=States.FIRST)
         >>> cell.handle_touch()
-        >>> cell._get_player_pieces.return_value.update_pieces.call_args
+        >>> cell.parent.get_player_pieces.return_value.update_pieces.call_args
         call(-1)
         """
         if self.should_ignore_touch():
@@ -68,7 +68,10 @@ class LimitedGridCell(GridCell):
             value = 1
         else:
             value = -1
-        self._get_player_pieces().update_pieces(value)
+        try:
+            self.parent.get_player_pieces().update_pieces(value)
+        except NoPiecesObjectForPlayer:
+            pass
 
 
 class TUIODragDropMixin(object):
@@ -257,6 +260,12 @@ class TUIODragDropMixin(object):
         assert (States.ILLEGAL not in grid)
         self.cells = grid + self.cells
 
+    def get_player_pieces(self):
+        player = _get_root_widget().player - 1
+        if player < self.player_pieces:
+            return self.player_pieces[player]
+        raise NoPiecesObjectForPlayer(player)
+
     def on_confirm(self, evt):
         """ Confirm event handler
         Arguments:
@@ -281,7 +290,10 @@ class TUIODragDropMixin(object):
             return False
         grid = self.grids[self.PREVIEW_GRID].copy()
         grid[grid == States.ILLEGAL] = States.DEACTIVATED
-        self.player_pieces[root.player - 1].update_pieces(-np.count_nonzero(grid))
+        try:
+            self.get_player_pieces().update_pieces(-np.count_nonzero(grid))
+        except NoPiecesObjectForPlayer:
+            pass
         self.combine_with_cells(grid)
         self.clear_grid(self.PREVIEW_GRID)
         self.update_cell_widgets()
@@ -481,13 +493,17 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
         adj_x, adj_y = self.cell_coordinates(evt.pos)
         adj_x_end = adj_x + x
         adj_y_end = adj_y + y
-        player_pieces = self.player_pieces[root.player - 1]
+        try:
+            player_pieces = self.get_player_pieces()
+        except NoPiecesObjectForPlayer:
+            player_pieces = None
+
         grid = self.grids[grid_index]
         counters = np.count_nonzero(grid[grid != States.ILLEGAL])
         counters += np.count_nonzero(pattern)
         overlaps = (self._cells[adj_x:adj_x_end, adj_y:adj_y_end]
                     != States.DEACTIVATED)
-        if counters > player_pieces.pieces or overlaps.any():
+        if (player_pieces and counters > player_pieces.pieces) or overlaps.any():
             if tolerate_illegal:
                 # Change the whole pattern into a red grid
                 np.core.multiarray.copyto(pattern, States.ILLEGAL,
@@ -497,7 +513,7 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
                 return
         with self._writable_grid(grid_index):
             grid[adj_x:adj_x_end, adj_y:adj_y_end] = pattern
-        if grid_index == self.CELLS_GRID:
+        if grid_index == self.CELLS_GRID and player_pieces:
             player_pieces.update_pieces(-counters)
         self.update_cell_widgets()
 
