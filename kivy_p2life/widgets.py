@@ -8,7 +8,7 @@ import os
 
 import numpy as np
 
-from kivy.core.window import Window
+from kivy.base import EventLoop
 from kivy.graphics import Color, Rectangle
 from kivy.properties import (
     AliasProperty,
@@ -33,9 +33,8 @@ from .exceptions import UnknownFiducialError
 
 
 def _get_root_widget():
-    # FIXME there must be a better way to do this!
-    assert len(Window.children) == 1, Window.children
-    return Window.children[0]
+    EventLoop.ensure_window()
+    return EventLoop.window.children[0]
 
 
 class LimitedGridCell(GridCell):

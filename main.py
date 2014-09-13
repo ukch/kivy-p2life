@@ -9,7 +9,6 @@ kivy.require('1.8.0')
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.config import Config as KivyConfig
-from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.anchorlayout import AnchorLayout
