@@ -407,7 +407,8 @@ class PiecesContainer(Widget):
 
         # constants
         CELL_SIZE = 25
-        MAX_COLUMNS = 18
+        # TODO allow this to be configured in gameoflife.ini
+        MAX_COLUMNS = 14
         GREY = [0.4, 0.4, 0.4, 1]
 
         if (old_amount and old_amount >= MAX_COLUMNS * 2
