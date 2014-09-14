@@ -1,3 +1,5 @@
+"""All widgets in the kivy-grid-cells package"""
+
 from __future__ import division
 
 import functools
@@ -101,10 +103,11 @@ class TUIODragDropMixin(object):
 
     def touch_to_pattern(self, touch):
         """ Find the related pattern from the touch and return it
-        Arguments:
-            touch; object; Kivy touch event with fiducial
+
+        :param touch: Kivy touch event with fiducial
 
         Touch with pattern fiducial
+
         >>> import mock
         >>> thing = type("Thing", (TUIODragDropMixin, Widget), {})()
         >>> thing.touch_to_pattern(mock.Mock(fid=2, angle=0))
@@ -115,6 +118,7 @@ class TUIODragDropMixin(object):
                [False,  True]], dtype=bool)
 
         Touch with non-pattern fiducial
+
         >>> event = mock.Mock(fid=101)
         >>> event.__repr__ = lambda *a: "Mock event"
         >>> thing.touch_to_pattern(event)
@@ -137,14 +141,14 @@ class TUIODragDropMixin(object):
         """ TUIO touch down event
 
         No fiducial
+
         >>> import mock
         >>> logging.root._log = mock.Mock()
-        >>> thing = type("Thing", (TUIODragDropMixin, Widget), { \
-            "cell_coordinates": lambda s, a: a, \
-        })()
+        >>> thing = type("Thing", (TUIODragDropMixin, Widget), {"cell_coordinates": lambda s, a: a})()
         >>> thing.on_touch_down(object())
 
         Event fiducial
+
         >>> events.CustomEvent.dispatch = mock.Mock()
         >>> thing.on_touch_down(mock.Mock(fid=101, pos=(0, 0), angle=0))
         False
@@ -152,11 +156,13 @@ class TUIODragDropMixin(object):
         1
 
         Pattern fiducial
+
         >>> thing.on_touch_down(mock.Mock(id=100, fid=2, pos=(0, 0), angle=0))
         >>> thing.pattern_locations
         {100: (0, 0, 2, 2)}
 
         Unknown fiducial
+
         >>> thing.on_touch_down(mock.Mock(fid=234, pos=(0, 0), angle=0))
         False
         >>> logging.root._log.call_count
@@ -198,14 +204,14 @@ class TUIODragDropMixin(object):
         """ TUIO touch move event
 
         No fiducial
+
         >>> import mock
         >>> logging.root._log = mock.Mock()
-        >>> thing = type("Thing", (TUIODragDropMixin, Widget), { \
-            "cell_coordinates": lambda s, a: a, \
-        })()
+        >>> thing = type("Thing", (TUIODragDropMixin, Widget), {"cell_coordinates": lambda s, a: a})()
         >>> thing.on_touch_move(object())
 
         Pattern fiducial
+
         >>> events.CustomEvent.dispatch = mock.Mock()
         >>> thing.on_touch_move(mock.Mock(id=100, fid=2, pos=(0, 0), angle=0))
         False
@@ -217,6 +223,7 @@ class TUIODragDropMixin(object):
         {100: (0, 0, 2, 2)}
 
         Unknown fiducial
+
         >>> thing.on_touch_move(mock.Mock(fid=234, pos=(0, 0), angle=0))
         False
         >>> logging.root._log.call_count
@@ -268,8 +275,8 @@ class TUIODragDropMixin(object):
 
     def on_confirm(self, evt):
         """ Confirm event handler
-        Arguments:
-            evt; object; ConfirmEventBlack or ConfirmEventWhite
+
+        :param evt: ConfirmEventBlack or ConfirmEventWhite
 
         >>> import mock
         >>> logging.root._log = mock.Mock()
@@ -277,6 +284,7 @@ class TUIODragDropMixin(object):
         >>> EventLoop.window = mock.Mock(children=[mock.Mock(player=1)])
 
         With bad player:
+
         >>> thing.on_confirm(mock.Mock(player=2))
         False
         >>> logging.root._log.call_count
@@ -301,8 +309,8 @@ class TUIODragDropMixin(object):
 
     def on_reset(self, evt):
         """ Reset event handler
-        Arguments:
-            evt; object; ConfirmEventBlack or ConfirmEventWhite
+
+        :param evt: ConfirmEventBlack or ConfirmEventWhite
 
         >>> import mock
         >>> logging.root._log = mock.Mock()
@@ -310,6 +318,7 @@ class TUIODragDropMixin(object):
         >>> EventLoop.window = mock.Mock(children=[mock.Mock(player=1)])
 
         With bad player:
+
         >>> thing.on_reset(mock.Mock(player=2))
         False
         >>> logging.root._log.call_count
@@ -329,6 +338,8 @@ class TUIODragDropMixin(object):
 
 class PiecesContainer(Widget):
 
+    """A widget showing the user's pieces"""
+
     number = NumericProperty(States.DEACTIVATED)
     pieces = NumericProperty(0)
 
@@ -338,10 +349,11 @@ class PiecesContainer(Widget):
 
     def redraw(self, old_amount=None):
         """ Ensure the pieces in the container are the correct colour
-        Arguments:
-            old_amount; int; For efficiency's sake, only redraw this many boxes
 
-        # Five pieces in a ten-piece cache
+        :param old_amount: For efficiency's sake, only redraw this many boxes
+
+        Five pieces in a ten-piece cache
+
         >>> pieces = PiecesContainer(number=States.FIRST, pieces=5)
         >>> pieces._colour_cache
         {}
@@ -360,6 +372,7 @@ class PiecesContainer(Widget):
         ((1, 4), [0.4, 0.4, 0.4])
 
         Remove all pieces but only redraw the first two
+
         >>> pieces.pieces = 0
         >>> pieces.redraw(2)
         >>> for key, (colour, shape) in sorted(pieces._colour_cache.items()):
@@ -376,6 +389,7 @@ class PiecesContainer(Widget):
         ((1, 4), [0.4, 0.4, 0.4])
 
         Redraw the whole 10-piece cache
+
         >>> pieces.redraw(10)
         >>> for key, (colour, shape) in sorted(pieces._colour_cache.items()):
         ...     key, colour.rgb
@@ -459,11 +473,13 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
     def drag_or_drop_shape(self, evt, grid_index, tolerate_illegal=False):
         """ Draw a shape on the grid
-        Arguments:
-            evt; object; Touch event
-            grid_index; int; Index of the grid to update
-            tolerate_illegal; bool; If specified, illegal moves will draw a red
-                box on the grid. Otherwise nothing will happen.
+
+        :param evt: Touch event
+        :param grid_index: Index of the grid to update
+        :type grid_index: int
+        :param tolerate_illegal: If specified, illegal moves will draw a red
+            box on the grid. Otherwise nothing will happen.
+        :type tolerate_illegal: bool
 
         >>> import mock
         >>> EventLoop.window = mock.Mock(children=[mock.Mock(player=1)])
@@ -473,16 +489,19 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
         >>> event = mock.Mock(pattern=np.array([[True]]), pos=(0, 0))
 
         Put shape on live grid
+
         >>> grid.drag_or_drop_shape(event, 0, tolerate_illegal=False)
         >>> grid.grids
         [array([[1, 0, 0]]), array([[0, 0, 0]])]
 
         Illegal shape on preview grid
+
         >>> grid.drag_or_drop_shape(event, 1, tolerate_illegal=False)
         >>> grid.grids
         [array([[1, 0, 0]]), array([[0, 0, 0]])]
 
         Illegal shape on preview grid; tolerate_illegal=True
+
         >>> grid.drag_or_drop_shape(event, 1, tolerate_illegal=True)
         >>> grid.grids
         [array([[1, 0, 0]]), array([[-1,  0,  0]])]
@@ -555,6 +574,8 @@ class GOLGrid(TUIODragDropMixin, DrawableGrid):
 
 
 class PlayerUI(Label):
+
+    """Holds details about the player"""
 
     app = ObjectProperty()
     colour = ListProperty(Colours[States.DEACTIVATED])

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# The below taken from
-# http://jakevdp.github.io/blog/2013/08/07/conways-game-of-life/
+"""Adaptation of Game of Life code from
+http://jakevdp.github.io/blog/2013/08/07/conways-game-of-life/
+"""
 
 import numpy as np
 
@@ -30,6 +31,7 @@ def p2life_step(X):
     http://www.dcs.bbk.ac.uk/~gr/software/p2life/p2life.php
 
     Simple evolution:
+
     >>> p2life_step(np.array([[1, 2, 1], [1, 2, 1], [1, 2, 1]]))
     array([[1, 0, 1],
            [1, 0, 1],
@@ -79,12 +81,8 @@ def life_animation(X):
         a two-dimensional numpy array showing the game board
 
     Simple spinner (it must be a 5x5 because our implementation wraps):
-    >>> gen = life_animation(\
-        np.array([[0, 0, 0, 0, 0],\
-                  [0, 0, 0, 0, 0],\
-                  [0, 1, 1, 1, 0],\
-                  [0, 0, 0, 0, 0],\
-                  [0, 0, 0, 0, 0]]))
+
+    >>> gen = life_animation(np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 1, 1, 1, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]))
     >>> gen.next() # first
     array([[0, 0, 0, 0, 0],
            [0, 0, 1, 0, 0],

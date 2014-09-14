@@ -1,3 +1,5 @@
+"""Setup, application and layout code"""
+
 from __future__ import division
 
 from ConfigParser import NoSectionError, NoOptionError
@@ -28,6 +30,8 @@ from kivy_p2life.utils import Player
 
 
 class CustomLayoutMixin(object):
+    """Base layout code relating to the game"""
+
     app = ObjectProperty(None)
     grid = ObjectProperty(None)
     shapes = ObjectProperty(None)
@@ -80,10 +84,13 @@ class CustomLayoutMixin(object):
 
     def evolve(self, iterations, speed, callback=None):
         """ Evolve the grid multiple times
-        Arguments:
-            iterations; int; Number of times to evolve
-            speed; int; Speed at which to evolve
-            callback; function; Function to call after evolving
+
+        :param iterations: Number of times to evolve
+        :type iterations int:
+        :param speed: Speed at which to evolve
+        :type speed int:
+        :param callback: Function to call after evolving
+        :type callback function:
 
         >>> import mock
         >>> from kivy.uix.widget import Widget
@@ -111,25 +118,24 @@ class CustomLayoutMixin(object):
 
         _update(remaining=iterations)
 
-    def _end_turn_callback(self):
+    def end_turn_callback(self):
         """ Finish ending the turn after iterating
 
         Setup:
+
         >>> import mock
         >>> from kivy.uix.widget import Widget
-        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {\
-            "set_turn": mock.Mock(),\
-            "set_winner": mock.Mock(),\
-        })()
+        >>> thing = type("Thing", (CustomLayoutMixin, Widget), {"set_turn": mock.Mock(), "set_winner": mock.Mock()})()
         >>> thing.player = Players.WHITE
         >>> thing.grid = mock.Mock()
         >>> ui = thing.grid.get_player_ui.return_value
 
         Normal turn:
+
         >>> ui.had_maximum_score = False
         >>> ui.has_maximum_score = True
         >>> thing.interactions_enabled = False
-        >>> thing._end_turn_callback()
+        >>> thing.end_turn_callback()
         >>> thing.set_winner.call_count
         0
         >>> thing.interactions_enabled
@@ -138,17 +144,18 @@ class CustomLayoutMixin(object):
         >>> ui.had_maximum_score = True
         >>> ui.has_maximum_score = False
         >>> thing.interactions_enabled = False
-        >>> thing._end_turn_callback()
+        >>> thing.end_turn_callback()
         >>> thing.set_winner.call_count
         0
         >>> thing.interactions_enabled
         True
 
         Winning turn:
+
         >>> ui.had_maximum_score = True
         >>> ui.has_maximum_score = True
         >>> thing.interactions_enabled = False
-        >>> thing._end_turn_callback()
+        >>> thing.end_turn_callback()
         >>> thing.set_winner.call_count
         1
         >>> thing.interactions_enabled
@@ -166,6 +173,7 @@ class CustomLayoutMixin(object):
         """ Perform end turn tasks and evolve
 
         Setup:
+
         >>> import mock
         >>> from kivy.uix.widget import Widget
         >>> thing = type("Thing", (CustomLayoutMixin, Widget), {})()
@@ -176,6 +184,7 @@ class CustomLayoutMixin(object):
         >>> ui = thing.grid.get_player_ui.return_value
 
         Maximum score:
+
         >>> ui.has_maximum_score = True
         >>> thing.end_turn()
         >>> ui.had_maximum_score
@@ -184,6 +193,7 @@ class CustomLayoutMixin(object):
         1
 
         Not maximum score:
+
         >>> ui.has_maximum_score = False
         >>> thing.end_turn()
         >>> ui.had_maximum_score
@@ -198,7 +208,7 @@ class CustomLayoutMixin(object):
         else:
             ui.had_maximum_score = False
         self.evolve(self.app.iterations_per_turn, speed=self.app.speed,
-                    callback=self._end_turn_callback)
+                    callback=self.end_turn_callback)
 
     @property
     def player(self):
@@ -245,10 +255,12 @@ class CustomLayoutMixin(object):
 
 class CustomBoxLayout(CustomLayoutMixin, BoxLayout):
 
-    pass
+    """Base layout for non-TUIO-mode"""
 
 
 class CustomAnchorLayout(CustomLayoutMixin, AnchorLayout):
+
+    """Base layout for TUIO-mode"""
 
     def set_winner(self, player, ui):
         ui.text = "You win!"
@@ -259,6 +271,8 @@ class CustomAnchorLayout(CustomLayoutMixin, AnchorLayout):
 
 
 class GameOfLifeApp(App):
+
+    """Kivy application code"""
 
     iterations_per_turn = NumericProperty()
     speed = NumericProperty
